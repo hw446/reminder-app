@@ -1,6 +1,7 @@
 // ── State ──────────────────────────────────────────────────────────
 let interval = 45
 let running = false
+const DEFAULT_MESSAGE = 'Take a break ♨️'
 
 // ── DOM ───────────────────────────────────────────────────────────
 const msgInput      = document.getElementById('msgInput')
@@ -20,10 +21,8 @@ const presetBtns    = document.querySelectorAll('.preset-btn')
   const saved = await window.electronAPI.getSettings()
   if (saved) {
     if (saved.intervalMinutes) setInterval_(saved.intervalMinutes)
-    if (saved.message) {
-      msgInput.value = saved.message
-      updateCharCount()
-    }
+    msgInput.value = saved.message || DEFAULT_MESSAGE
+    updateCharCount()
   }
 })()
 
@@ -91,7 +90,7 @@ function stopReminder() {
 
 // ── Test Button ───────────────────────────────────────────────────
 btnTest.addEventListener('click', () => {
-  const message = msgInput.value.trim() || 'This is a test reminder 🔔'
+  const message = msgInput.value.trim() || DEFAULT_MESSAGE
   window.electronAPI.testReminder({ message })
 })
 

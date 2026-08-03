@@ -1,6 +1,6 @@
 {
   "name": "reminder-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fullscreen reminder assistant for macOS",
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "src/main.js",

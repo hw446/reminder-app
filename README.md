@@ -28,7 +28,7 @@ The packaged app and DMG will be created in `dist/`. Open the DMG and drag Remin
 
 ## Usage Example
 
-1. Enter `Drink water and stretch` as the reminder message.
+1. Keep the default `Take a break ♨️` message, or enter your own reminder.
 2. Choose `45 min` as the interval.
 3. Click **Start Reminder**.
 4. When the reminder appears, dismiss it with a click, `Esc`, `Space`, or `Enter`.

@@ -2,6 +2,7 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, shell, pow
 const path = require('path')
 const Store = require('electron-store')
 
+const DEFAULT_MESSAGE = 'Take a break ♨️'
 const store = new Store()
 
 let mainWindow = null
@@ -294,7 +295,7 @@ ipcMain.on('dismiss-overlay', () => {
 })
 
 ipcMain.on('test-reminder', (_, { message }) => {
-  triggerReminder(message || 'This is a test reminder 🔔')
+  triggerReminder(message || DEFAULT_MESSAGE)
 })
 
 ipcMain.on('save-settings', (_, settings) => {
@@ -302,7 +303,7 @@ ipcMain.on('save-settings', (_, settings) => {
 })
 
 ipcMain.handle('get-settings', () => {
-  return store.get('settings', { intervalMinutes: 45, message: '' })
+  return store.get('settings', { intervalMinutes: 45, message: DEFAULT_MESSAGE })
 })
 
 // ─── Tray Icon (SVG → DataURL) ────────────────────────────────────
