@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>提醒</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --accent: #e8c97a;
+  --accent2: #a78de0;
+}
+
+html, body {
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+}
+
+body {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  -webkit-font-smoothing: antialiased;
+  animation: fade-in 0.5s ease forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; background: #000; }
+  to   { opacity: 1; }
+}
+
+/* Ambient radial glow */
+.bg-glow {
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 25% 25%, rgba(232,201,122,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 55% at 75% 75%, rgba(167,141,224,0.07) 0%, transparent 65%);
+  animation: glow-breathe 4s ease-in-out infinite alternate;
+}
+@keyframes glow-breathe {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+/* Grain */
+.bg-grain {
+  position: fixed; inset: 0; pointer-events: none; opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Content wrapper */
+.content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0;
+  animation: rise 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+  opacity: 0;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Ring pulse */
+.rings {
+  position: relative;
+  width: 80px; height: 80px;
+  margin-bottom: 52px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(232,201,122,0.2);
+  animation: ring-expand 2.8s ease-out infinite;
+}
+.ring:nth-child(1) { width: 80px;  height: 80px;  animation-delay: 0s; }
+.ring:nth-child(2) { width: 130px; height: 130px; animation-delay: 0.7s; }
+.ring:nth-child(3) { width: 190px; height: 190px; animation-delay: 1.4s; }
+.ring:nth-child(4) { width: 260px; height: 260px; animation-delay: 2.1s; }
+
+@keyframes ring-expand {
+  0%   { opacity: 0.7; transform: scale(0.75); }
+  100% { opacity: 0;   transform: scale(1.3); }
+}
+
+.bell {
+  position: relative; z-index: 1;
+  font-size: 44px; line-height: 1;
+  animation: bell-ring 0.5s ease-in-out 3;
+}
+@keyframes bell-ring {
+  0%,100% { transform: rotate(0deg) scale(1); }
+  20%      { transform: rotate(-18deg) scale(1.05); }
+  60%      { transform: rotate(18deg) scale(1.05); }
+  80%      { transform: rotate(-8deg); }
+}
+
+/* Message */
+.message {
+  font-family: 'Hiragino Mincho ProN', 'Hiragino Mincho Pro', 'STSong', 'SimSun', serif;
+  font-weight: 300;
+  font-size: clamp(24px, 4.5vw, 52px);
+  color: #fff;
+  line-height: 1.5;
+  max-width: 65vw;
+  margin-bottom: 36px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 60px rgba(232,201,122,0.15);
+}
+
+/* Time */
+.time-label {
+  font-size: 12px; letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.22);
+  margin-bottom: 52px;
+}
+
+/* Dismiss hint */
+.dismiss-hint {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 30px;
+  padding: 11px 28px;
+  font-size: 11px; letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+}
+.dismiss-hint:hover {
+  border-color: rgba(232,201,122,0.35);
+  color: var(--accent);
+  background: rgba(232,201,122,0.05);
+}
+
+/* ESC label */
+.esc-hint {
+  margin-top: 16px;
+  font-size: 10px; letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.1);
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="bg-grain"></div>
+
+<div class="content">
+  <div class="rings">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="bell">🔔</div>
+  </div>
+
+  <div class="message" id="message">提醒内容</div>
+  <div class="time-label" id="timeLabel">--:--</div>
+
+  <button class="dismiss-hint" onclick="dismiss()">关闭提醒</button>
+  <div class="esc-hint">按 ESC 也可关闭</div>
+</div>
+
+<script>
+  function dismiss() {
+    document.body.style.animation = 'fade-out 0.3s ease forwards'
+    document.body.style.setProperty('--', '')
+    setTimeout(() => window.electronAPI.dismissOverlay(), 280)
+  }
+
+  // Click anywhere to dismiss
+  document.body.addEventListener('click', (e) => {
+    if (e.target.classList.contains('dismiss-hint')) return
+    dismiss()
+  })
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+      dismiss()
+    }
+  })
+
+  window.electronAPI.onShowReminder(({ message }) => {
+    document.getElementById('message').textContent = message
+
+    const now = new Date()
+    document.getElementById('timeLabel').textContent =
+      now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+  })
+
+  // Add fade-out keyframe
+  const style = document.createElement('style')
+  style.textContent = `@keyframes fade-out { from{opacity:1} to{opacity:0} }`
+  document.head.appendChild(style)
+</script>
+</body>
+</html>

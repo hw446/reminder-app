@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>提醒助手</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="glow-orb one"></div>
+<div class="glow-orb two"></div>
+
+<div class="panel">
+  <!-- Traffic lights handled natively via hiddenInset, padding for drag region -->
+  <div class="titlebar">
+    <span class="app-title">提醒助手</span>
+  </div>
+
+  <section class="section">
+    <span class="label">提醒内容</span>
+    <textarea class="reminder-input" id="msgInput"
+      placeholder="输入提醒内容…&#10;例如：起身活动一下，喝点水 💧"
+      maxlength="200"></textarea>
+    <div class="char-count"><span id="charCount">0</span> / 200</div>
+  </section>
+
+  <section class="section">
+    <span class="label">提醒间隔</span>
+    <div class="interval-row">
+      <div class="interval-display" id="intervalDisplay">25</div>
+      <div class="interval-controls">
+        <button class="btn-step" id="btnUp">▲</button>
+        <button class="btn-step" id="btnDown">▼</button>
+      </div>
+      <span class="interval-suffix">分钟 / 次</span>
+    </div>
+
+    <div class="presets">
+      <button class="preset-btn" data-val="5">5 分</button>
+      <button class="preset-btn" data-val="10">10 分</button>
+      <button class="preset-btn" data-val="30">30 分</button>
+      <button class="preset-btn active" data-val="45">45 分</button>
+      <button class="preset-btn" data-val="60">60 分</button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">尚未启动</span>
+    <span class="countdown" id="countdown"></span>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-secondary" id="btnTest" title="立即测试全屏提醒">测试</button>
+    <button class="btn-main" id="btnMain">开始提醒</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
