@@ -1,5 +1,5 @@
 #!/bin/bash
-# 在 Mac 上运行此脚本，将 iconset 转换为 .icns 文件
+# Run this script on macOS to convert the iconset into an .icns file.
 # Run this script on your Mac before npm run build
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

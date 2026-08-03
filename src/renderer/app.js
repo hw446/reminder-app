@@ -91,26 +91,26 @@ function stopReminder() {
 
 // ── Test Button ───────────────────────────────────────────────────
 btnTest.addEventListener('click', () => {
-  const message = msgInput.value.trim() || '这是一条测试提醒 🔔'
+  const message = msgInput.value.trim() || 'This is a test reminder 🔔'
   window.electronAPI.testReminder({ message })
 })
 
 // ── IPC: Listeners from Main ──────────────────────────────────────
 window.electronAPI.onReminderStarted(() => {
   running = true
-  btnMain.textContent = '停止提醒'
+  btnMain.textContent = 'Stop Reminder'
   btnMain.classList.add('stop')
   statusDot.classList.add('active')
-  statusText.textContent = `每 ${interval} 分钟提醒一次`
+  statusText.textContent = `Every ${interval} minutes`
   setControlsDisabled(true)
 })
 
 window.electronAPI.onReminderStopped(() => {
   running = false
-  btnMain.textContent = '开始提醒'
+  btnMain.textContent = 'Start Reminder'
   btnMain.classList.remove('stop')
   statusDot.classList.remove('active')
-  statusText.textContent = '已停止'
+  statusText.textContent = 'Stopped'
   countdown.textContent = ''
   setControlsDisabled(false)
 })
@@ -128,14 +128,14 @@ window.electronAPI.onTrayStop(() => stopReminder())
 window.electronAPI.onScreenLocked(() => {
   statusDot.classList.remove('active')
   statusDot.style.background = 'var(--muted)'
-  statusText.textContent = '息屏中，计时已暂停'
+  statusText.textContent = 'Screen locked, timer paused'
   countdown.textContent = ''
 })
 
 window.electronAPI.onScreenUnlocked(() => {
   statusDot.classList.add('active')
   statusDot.style.background = ''
-  statusText.textContent = `每 ${interval} 分钟提醒一次（已重置倒计时）`
+  statusText.textContent = `Every ${interval} minutes (countdown reset)`
 })
 
 // ── Helpers ───────────────────────────────────────────────────────

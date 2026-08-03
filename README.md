@@ -29,12 +29,12 @@ The packaged app and DMG will be created in `dist/`. Open the DMG and drag Remin
 ## Usage Example
 
 1. Enter `Drink water and stretch` as the reminder message.
-2. Choose `45 分` as the interval.
-3. Click **开始提醒**.
+2. Choose `45 min` as the interval.
+3. Click **Start Reminder**.
 4. When the reminder appears, dismiss it with a click, `Esc`, `Space`, or `Enter`.
 5. Use the menu bar icon to show the window, stop reminders, or quit the app.
 
-Use **测试** to preview a reminder immediately. Reminders cover every connected display, and the countdown restarts after your Mac wakes or unlocks.
+Use **Test** to preview a reminder immediately. Reminders cover every connected display, and the countdown restarts after your Mac wakes or unlocks.
 
 ## License
 

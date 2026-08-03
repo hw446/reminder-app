@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="380" viewBox="0 0 540 380">
+  <rect width="540" height="380" fill="#151922"/>
+  <g stroke="#F2CF70" stroke-opacity="0.12" stroke-width="1">
+    <path d="M0 30h540M0 60h540M0 90h540M0 120h540M0 150h540M0 180h540M0 210h540M0 240h540M0 270h540M0 300h540M0 330h540M30 0v380M60 0v380M90 0v380M120 0v380M150 0v380M180 0v380M210 0v380M240 0v380M270 0v380M300 0v380M330 0v380M360 0v380M390 0v380M420 0v380M450 0v380M480 0v380M510 0v380"/>
+  </g>
+  <text x="270" y="48" fill="#F2CF70" font-family="Helvetica" font-size="13" text-anchor="middle">REMINDER ASSISTANT</text>
+  <path d="M220 205h92m-14-13 14 13-14 13" fill="none" stroke="#F2CF70" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="270" y="350" fill="#A9AFBA" font-family="Helvetica" font-size="11" text-anchor="middle">DRAG TO APPLICATIONS</text>
+</svg>

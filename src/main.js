@@ -133,7 +133,7 @@ function createTray() {
   // Create a simple 16x16 template image for tray
   const icon = nativeImage.createFromDataURL(getTrayIconDataURL())
   tray = new Tray(icon)
-  tray.setToolTip('提醒助手')
+  tray.setToolTip('Reminder Assistant')
   updateTrayMenu()
 
   tray.on('click', () => {
@@ -146,7 +146,7 @@ function createTray() {
 function updateTrayMenu() {
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: isRunning ? '⏸ 停止提醒' : '▶ 开始提醒',
+      label: isRunning ? '⏸ Stop Reminders' : '▶ Start Reminders',
       click: () => {
         if (isRunning) {
           mainWindow?.webContents.send('tray-stop')
@@ -158,12 +158,12 @@ function updateTrayMenu() {
     },
     { type: 'separator' },
     {
-      label: '显示主窗口',
+      label: 'Show Window',
       click: () => { mainWindow?.show() }
     },
     { type: 'separator' },
     {
-      label: '退出',
+      label: 'Quit',
       click: () => { app.exit(0) }
     }
   ])
@@ -173,7 +173,7 @@ function updateTrayMenu() {
 // ─── Power / Screen Monitor ───────────────────────────────────────
 
 function setupPowerMonitor() {
-  // Screen locked (息屏 / 锁屏)
+  // Screen locked
   powerMonitor.on('lock-screen', () => {
     if (!isRunning) return
     screenLocked = true
@@ -182,7 +182,7 @@ function setupPowerMonitor() {
     console.log('[ReminderApp] Screen locked — timers paused')
   })
 
-  // Screen unlocked (解锁 / 亮屏)
+  // Screen unlocked
   powerMonitor.on('unlock-screen', () => {
     if (!isRunning) return
     screenLocked = false
@@ -193,7 +193,7 @@ function setupPowerMonitor() {
     console.log('[ReminderApp] Screen unlocked — timers resumed')
   })
 
-  // System sleep (合盖 / 休眠)
+  // System sleep
   powerMonitor.on('suspend', () => {
     if (!isRunning) return
     screenLocked = true
@@ -294,7 +294,7 @@ ipcMain.on('dismiss-overlay', () => {
 })
 
 ipcMain.on('test-reminder', (_, { message }) => {
-  triggerReminder(message || '这是一条测试提醒 🔔')
+  triggerReminder(message || 'This is a test reminder 🔔')
 })
 
 ipcMain.on('save-settings', (_, settings) => {

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
-<title>提醒</title>
+<title>Reminder</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -163,11 +163,11 @@ body {
     <div class="bell">🔔</div>
   </div>
 
-  <div class="message" id="message">提醒内容</div>
+  <div class="message" id="message">Reminder</div>
   <div class="time-label" id="timeLabel">--:--</div>
 
-  <button class="dismiss-hint" onclick="dismiss()">关闭提醒</button>
-  <div class="esc-hint">按 ESC 也可关闭</div>
+  <button class="dismiss-hint" onclick="dismiss()">Dismiss</button>
+  <div class="esc-hint">Press ESC to dismiss</div>
 </div>
 
 <script>
@@ -194,7 +194,7 @@ body {
 
     const now = new Date()
     document.getElementById('timeLabel').textContent =
-      now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+      now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
   })
 
   // Add fade-out keyframe

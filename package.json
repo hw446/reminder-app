@@ -1,7 +1,7 @@
 {
   "name": "reminder-app",
   "version": "1.0.0",
-  "description": "macOS 全屏提醒助手",
+  "description": "Fullscreen reminder assistant for macOS",
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "src/main.js",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "build": {
     "appId": "com.reminder.app",
-    "productName": "提醒助手",
+    "productName": "Reminder Assistant",
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "assets/icon.png",
@@ -22,7 +22,7 @@
       "darkModeSupport": true
     },
     "dmg": {
-      "title": "提醒助手",
+      "title": "Reminder Assistant",
       "background": "assets/dmg-bg.png",
       "window": { "width": 540, "height": 380 }
     },
