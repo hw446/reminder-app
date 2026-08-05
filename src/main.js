@@ -131,8 +131,8 @@ function closeOverlay() {
 // ─── Tray ─────────────────────────────────────────────────────────
 
 function createTray() {
-  // Create a simple 16x16 template image for tray
-  const icon = nativeImage.createFromDataURL(getTrayIconDataURL())
+  const icon = nativeImage.createFromPath(path.join(__dirname, '../assets/trayTemplate.png'))
+  icon.setTemplateImage(true)
   tray = new Tray(icon)
   tray.setToolTip('Reminder Assistant')
   updateTrayMenu()
@@ -305,13 +305,3 @@ ipcMain.on('save-settings', (_, settings) => {
 ipcMain.handle('get-settings', () => {
   return store.get('settings', { intervalMinutes: 45, message: DEFAULT_MESSAGE })
 })
-
-// ─── Tray Icon (SVG → DataURL) ────────────────────────────────────
-
-function getTrayIconDataURL() {
-  // Simple bell SVG as template image (black on transparent for macOS)
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-    <path fill="#000000" d="M8 1a1 1 0 0 1 1 1v.5A4 4 0 0 1 12 6v3l1.5 1.5v.5h-11v-.5L4 9V6A4 4 0 0 1 7 2.5V2a1 1 0 0 1 1-1zm0 13a2 2 0 0 1-2-2h4a2 2 0 0 1-2 2z"/>
-  </svg>`
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
-}
