@@ -15,7 +15,7 @@ cd reminder-app
 ./scripts/build-macos.sh
 ```
 
-Open `dist/Reminder-Assistant-1.1.0.dmg`, then drag Reminder Assistant to Applications. The app is not notarized, so macOS may require you to right-click it and choose **Open** the first time.
+Open `dist/Reminder-Assistant-1.2.0.dmg`, then drag Reminder Assistant to Applications. The app is not notarized, so macOS may require you to right-click it and choose **Open** the first time.
 
 ## Usage Example
 

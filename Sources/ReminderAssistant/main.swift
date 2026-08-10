@@ -1,9 +1,11 @@
 import AppKit
 import Darwin
+import ServiceManagement
 
 private let defaultMessage = "Take a break ♨️"
 private let defaultIntervalMinutes = 20
 private let defaultRestSeconds = 20
+private let launchAgentLabel = "com.reminder.app"
 
 private enum DefaultsKey {
     static let message = "message"
@@ -180,6 +182,7 @@ private final class OverlayController {
         }
 
         if let window = windows.first, let view = views.first {
+            NSApp.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
             window.makeFirstResponder(view)
         }
@@ -207,6 +210,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
     private let restField = NSTextField()
     private let intervalStepper = NSStepper()
     private let restStepper = NSStepper()
+    private let autoStartCheckbox = NSButton(checkboxWithTitle: "Start at login", target: nil, action: nil)
     private let statusLabel = NSTextField(labelWithString: "Stopped")
     private let testButton = NSButton()
     private let startButton = NSButton()
@@ -288,7 +292,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
 
     private func createSettingsWindow() {
         settingsWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 390),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 420),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -321,6 +325,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
         configureStepper(restStepper, value: restField.integerValue, min: 1, max: 3600, action: #selector(restStepperChanged))
         let restRow = numberRow(field: restField, stepper: restStepper, suffix: "seconds")
 
+        autoStartCheckbox.target = self
+        autoStartCheckbox.action = #selector(toggleAutoStart)
+        updateAutoStartControl()
+
         statusLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         statusLabel.textColor = .secondaryLabelColor
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -350,6 +358,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
             intervalRow,
             restLabel,
             restRow,
+            autoStartCheckbox,
             statusLabel,
             buttonRow
         ])
@@ -438,6 +447,63 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
         defaults.set(interval, forKey: DefaultsKey.intervalMinutes)
         defaults.set(rest, forKey: DefaultsKey.restSeconds)
         return (message, interval, rest)
+    }
+
+    private var launchAgentURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/LaunchAgents")
+            .appendingPathComponent("\(launchAgentLabel).plist")
+    }
+
+    private var autoStartEnabled: Bool {
+        if #available(macOS 13.0, *) {
+            return SMAppService.mainApp.status == .enabled
+        }
+        return FileManager.default.fileExists(atPath: launchAgentURL.path)
+    }
+
+    private func updateAutoStartControl() {
+        autoStartCheckbox.state = autoStartEnabled ? .on : .off
+    }
+
+    @objc private func toggleAutoStart() {
+        let enabled = autoStartCheckbox.state == .on
+        do {
+            if #available(macOS 13.0, *) {
+                let service = SMAppService.mainApp
+                if enabled {
+                    if service.status == .requiresApproval {
+                        SMAppService.openSystemSettingsLoginItems()
+                    } else if service.status != .enabled {
+                        try service.register()
+                    }
+                } else if service.status != .notRegistered {
+                    try service.unregister()
+                }
+            } else if enabled {
+                let executable = Bundle.main.executableURL?.path ?? "\(Bundle.main.bundlePath)/Contents/MacOS/ReminderAssistant"
+                let plist: [String: Any] = [
+                    "Label": launchAgentLabel,
+                    "ProgramArguments": [executable],
+                    "RunAtLoad": true,
+                    "ProcessType": "Interactive",
+                    "LimitLoadToSessionType": "Aqua"
+                ]
+                let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+                try FileManager.default.createDirectory(at: launchAgentURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try data.write(to: launchAgentURL, options: .atomic)
+            } else {
+                try FileManager.default.removeItem(at: launchAgentURL)
+            }
+        } catch {
+            updateAutoStartControl()
+            let alert = NSAlert()
+            alert.messageText = "Could not update login item"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+            return
+        }
+        updateAutoStartControl()
     }
 
     private func startReminders() {
@@ -563,6 +629,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
 
     @objc private func showSettings() {
         NSApp.activate(ignoringOtherApps: true)
+        updateAutoStartControl()
         settingsWindow.makeKeyAndOrderFront(nil)
     }
 
