@@ -15,7 +15,7 @@ cd reminder-app
 ./scripts/build-macos.sh
 ```
 
-Open `dist/Reminder-Assistant-1.2.0.dmg`, then drag Reminder Assistant to Applications. The app is not notarized, so macOS may require you to right-click it and choose **Open** the first time.
+Open `dist/Reminder-Assistant-1.3.0.dmg`, then drag Reminder Assistant to Applications. The app is not notarized, so macOS may require you to right-click it and choose **Open** the first time.
 
 ## Usage Example
 
@@ -25,7 +25,13 @@ Open `dist/Reminder-Assistant-1.2.0.dmg`, then drag Reminder Assistant to Applic
 4. Click **Start Reminders**.
 5. Dismiss a reminder with a click, `Esc`, `Space`, or `Return`, or let its rest countdown finish.
 
-The next reminder interval starts only after the rest ends. Each reminder covers the full bounds of every connected display. Timers pause while the Mac is locked or asleep.
+The next reminder interval starts only after the rest ends. Each reminder covers the full bounds of every connected display. Timers pause while the Mac is locked or asleep. When a reminder is dismissed, keyboard focus returns to the app that was frontmost before the reminder appeared.
+
+Only one instance of the app runs at a time. If you launch it again, the existing instance is activated instead.
+
+### Start at login
+
+Enable **Start at login** in Settings. On macOS 13 and later the app uses the native login item service; macOS may ask you to approve it under **System Settings › General › Login Items & Extensions** before it takes effect. The checkbox and the note below it reflect the real system status, so they stay in sync once permission is granted.
 
 Run the native scheduling and multi-display check with:
 

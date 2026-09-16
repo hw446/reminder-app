@@ -98,6 +98,7 @@ private final class OverlayController {
     private var completion: (() -> Void)?
     private var message = ""
     private var endDate: Date?
+    private var previouslyActiveApp: NSRunningApplication?
 
     var isShowing: Bool { !windows.isEmpty }
     var windowFrames: [NSRect] { windows.map(\.frame) }
@@ -109,7 +110,10 @@ private final class OverlayController {
     }
 
     func show(message: String, duration: Int, onFinished: @escaping () -> Void) {
-        close(notifyCompletion: false)
+        if previouslyActiveApp == nil {
+            previouslyActiveApp = NSWorkspace.shared.frontmostApplication
+        }
+        close(notifyCompletion: false, restoreFocus: false)
         self.message = message
         completion = onFinished
         endDate = Date().addingTimeInterval(TimeInterval(duration))
@@ -130,17 +134,29 @@ private final class OverlayController {
         updateCountdown()
     }
 
-    func close(notifyCompletion: Bool) {
+    func close(notifyCompletion: Bool, restoreFocus: Bool = true) {
         timer?.invalidate()
         timer = nil
         endDate = nil
         closeWindows()
+        if restoreFocus {
+            restorePreviousFocus()
+        }
 
         let callback = completion
         completion = nil
         if notifyCompletion {
             callback?()
         }
+    }
+
+    private func restorePreviousFocus() {
+        guard let app = previouslyActiveApp else { return }
+        previouslyActiveApp = nil
+        // If our own app was frontmost before the reminder (e.g. the settings
+        // window), leave it active instead of activating something else.
+        guard app.bundleIdentifier != Bundle.main.bundleIdentifier, !app.isTerminated else { return }
+        app.activate(options: [])
     }
 
     private func tick() {
@@ -211,6 +227,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
     private let intervalStepper = NSStepper()
     private let restStepper = NSStepper()
     private let autoStartCheckbox = NSButton(checkboxWithTitle: "Start at login", target: nil, action: nil)
+    private let autoStartStatusLabel = NSTextField(labelWithString: "")
     private let statusLabel = NSTextField(labelWithString: "Stopped")
     private let testButton = NSButton()
     private let startButton = NSButton()
@@ -235,6 +252,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
         createSettingsWindow()
         createStatusItem()
         observeSystemEvents()
+        remindAboutLoginItemPermissionIfNeeded()
 
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             self?.updateStatus()
@@ -327,6 +345,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
 
         autoStartCheckbox.target = self
         autoStartCheckbox.action = #selector(toggleAutoStart)
+        autoStartStatusLabel.font = .systemFont(ofSize: 11)
+        autoStartStatusLabel.textColor = .secondaryLabelColor
+        autoStartStatusLabel.maximumNumberOfLines = 0
+        autoStartStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        autoStartStatusLabel.widthAnchor.constraint(equalToConstant: 410).isActive = true
         updateAutoStartControl()
 
         statusLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
@@ -359,6 +382,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
             restLabel,
             restRow,
             autoStartCheckbox,
+            autoStartStatusLabel,
             statusLabel,
             buttonRow
         ])
@@ -430,6 +454,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
         workspaceCenter.addObserver(self, selector: #selector(pauseForSystem), name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
         workspaceCenter.addObserver(self, selector: #selector(resumeAfterSystem), name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(screensChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive), name: NSApplication.didBecomeActiveNotification, object: nil)
     }
 
     private func saveSettings() -> (message: String, intervalMinutes: Int, restSeconds: Int) {
@@ -464,23 +489,94 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
 
     private func updateAutoStartControl() {
         autoStartCheckbox.state = autoStartEnabled ? .on : .off
+
+        if #available(macOS 13.0, *) {
+            switch SMAppService.mainApp.status {
+            case .requiresApproval:
+                autoStartStatusLabel.stringValue = "Waiting for permission. Turn on \"Reminder Assistant\" under \"Open at Login\" in System Settings \u{203A} General \u{203A} Login Items & Extensions."
+            case .notFound:
+                autoStartStatusLabel.stringValue = "The app could not be found by the system. Move Reminder Assistant to /Applications and try again."
+            default:
+                autoStartStatusLabel.stringValue = ""
+            }
+        } else {
+            autoStartStatusLabel.stringValue = ""
+        }
+    }
+
+    private func remindAboutLoginItemPermissionIfNeeded() {
+        guard #available(macOS 13.0, *) else { return }
+        guard SMAppService.mainApp.status == .requiresApproval else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.promptForLoginItemApproval()
+        }
+    }
+
+    @objc private func appDidBecomeActive() {
+        updateAutoStartControl()
     }
 
     @objc private func toggleAutoStart() {
-        let enabled = autoStartCheckbox.state == .on
+        let wantsEnabled = autoStartCheckbox.state == .on
+        if #available(macOS 13.0, *) {
+            updateModernLoginItem(enabled: wantsEnabled)
+        } else {
+            updateLegacyLoginItem(enabled: wantsEnabled)
+        }
+        updateAutoStartControl()
+    }
+
+    @available(macOS 13.0, *)
+    private func updateModernLoginItem(enabled: Bool) {
+        let service = SMAppService.mainApp
         do {
-            if #available(macOS 13.0, *) {
-                let service = SMAppService.mainApp
-                if enabled {
+            if enabled {
+                switch service.status {
+                case .enabled:
+                    break
+                case .requiresApproval:
+                    // Already registered, but macOS is still waiting for the user.
+                    promptForLoginItemApproval()
+                default:
+                    try service.register()
                     if service.status == .requiresApproval {
-                        SMAppService.openSystemSettingsLoginItems()
+                        promptForLoginItemApproval()
                     } else if service.status != .enabled {
-                        try service.register()
+                        presentLoginItemError("macOS did not enable the login item (status: \(service.status.rawValue)).")
                     }
-                } else if service.status != .notRegistered {
-                    try service.unregister()
                 }
-            } else if enabled {
+            } else if service.status != .notRegistered {
+                try service.unregister()
+            }
+        } catch {
+            presentLoginItemError(error.localizedDescription)
+        }
+    }
+
+    @available(macOS 13.0, *)
+    private func promptForLoginItemApproval() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Permission needed to start at login"
+        alert.informativeText = "macOS needs your approval before Reminder Assistant can open at login. In System Settings \u{203A} General \u{203A} Login Items & Extensions, turn on \"Reminder Assistant\" under \"Open at Login\".\n\nThe \"Start at login\" checkbox here will turn on automatically once permission is granted."
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Not Now")
+        if alert.runModal() == .alertFirstButtonReturn {
+            SMAppService.openSystemSettingsLoginItems()
+        }
+    }
+
+    private func presentLoginItemError(_ message: String) {
+        updateAutoStartControl()
+        let alert = NSAlert()
+        alert.messageText = "Could not update login item"
+        alert.informativeText = message
+        alert.runModal()
+    }
+
+    private func updateLegacyLoginItem(enabled: Bool) {
+        do {
+            if enabled {
                 let executable = Bundle.main.executableURL?.path ?? "\(Bundle.main.bundlePath)/Contents/MacOS/ReminderAssistant"
                 let plist: [String: Any] = [
                     "Label": launchAgentLabel,
@@ -492,18 +588,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
                 let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
                 try FileManager.default.createDirectory(at: launchAgentURL.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try data.write(to: launchAgentURL, options: .atomic)
-            } else {
+            } else if FileManager.default.fileExists(atPath: launchAgentURL.path) {
                 try FileManager.default.removeItem(at: launchAgentURL)
             }
         } catch {
-            updateAutoStartControl()
-            let alert = NSAlert()
-            alert.messageText = "Could not update login item"
-            alert.informativeText = error.localizedDescription
-            alert.runModal()
-            return
+            presentLoginItemError(error.localizedDescription)
         }
-        updateAutoStartControl()
     }
 
     private func startReminders() {
@@ -690,5 +780,38 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
 
 let application = NSApplication.shared
 private let delegate = AppDelegate()
+
+// Only one instance may run at a time. LaunchServices already honours
+// LSMultipleInstancesProhibited when the app is opened normally, but the
+// login-item path and direct binary launches bypass that, so guard with a
+// non-blocking file lock for the lifetime of the process.
+private var singleInstanceLockDescriptor: Int32 = -1
+
+private func acquireSingleInstanceLock() -> Bool {
+    let path = (NSTemporaryDirectory() as NSString).appendingPathComponent("\(launchAgentLabel).lock")
+    let descriptor = open(path, O_CREAT | O_RDWR, 0o644)
+    guard descriptor >= 0 else { return true }
+    if flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
+        close(descriptor)
+        return false
+    }
+    singleInstanceLockDescriptor = descriptor
+    return true
+}
+
+private func activateRunningInstance() {
+    let identifier = Bundle.main.bundleIdentifier ?? launchAgentLabel
+    let currentPID = ProcessInfo.processInfo.processIdentifier
+    let existing = NSRunningApplication
+        .runningApplications(withBundleIdentifier: identifier)
+        .first { $0.processIdentifier != currentPID }
+    existing?.activate(options: [.activateIgnoringOtherApps])
+}
+
+if !acquireSingleInstanceLock() {
+    activateRunningInstance()
+    exit(0)
+}
+
 application.delegate = delegate
 application.run()

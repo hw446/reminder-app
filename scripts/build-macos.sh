@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 OUTPUT_DIR="$PROJECT_DIR/dist"
 APP_PATH="$OUTPUT_DIR/Reminder Assistant.app"
-DMG_PATH="$OUTPUT_DIR/Reminder-Assistant-1.2.0.dmg"
+DMG_PATH="$OUTPUT_DIR/Reminder-Assistant-1.3.0.dmg"
 STAGING_DIR="$(mktemp -d)"
 
 trap 'rm -rf "$STAGING_DIR"' EXIT
