@@ -259,7 +259,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
         }
         RunLoop.main.add(timer, forMode: .common)
         statusTimer = timer
-        refreshControls()
+        startReminders()
 
         if ProcessInfo.processInfo.arguments.contains("--smoke-test") {
             DispatchQueue.main.async { [weak self] in
@@ -685,6 +685,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
     }
 
     private func runSmokeTest() {
+        let startupDelay = nextReminderDate?.timeIntervalSinceNow ?? -1
+        let expectedStartupDelay = TimeInterval(defaults.integer(forKey: DefaultsKey.intervalMinutes) * 60)
+        let startedOnLaunch = isRunning
+            && intervalTimer?.isValid == true
+            && startupDelay > expectedStartupDelay - 5
+            && startupDelay <= expectedStartupDelay
+            && activeMessage == defaults.string(forKey: DefaultsKey.message)
+            && activeIntervalMinutes == defaults.integer(forKey: DefaultsKey.intervalMinutes)
+            && activeRestSeconds == defaults.integer(forKey: DefaultsKey.restSeconds)
+            && !startMenuItem.isEnabled
+            && stopMenuItem.isEnabled
+
         activeMessage = defaultMessage
         activeIntervalMinutes = defaultIntervalMinutes
         activeRestSeconds = 1
@@ -708,9 +720,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDel
                 && self.intervalTimer != nil
                 && nextDelay > 1198
                 && nextDelay <= 1200
-            let passed = coversEveryScreen && timerPausedDuringRest && timerStartedAfterRest && menuBarReady
+            let passed = startedOnLaunch && coversEveryScreen && timerPausedDuringRest && timerStartedAfterRest && menuBarReady
             let formattedDelay = String(format: "%.1f", nextDelay)
-            print("SMOKE_TEST passed=\(passed) screens=\(expectedFrames.count) timerPausedDuringRest=\(timerPausedDuringRest) nextDelay=\(formattedDelay)")
+            print("SMOKE_TEST passed=\(passed) startedOnLaunch=\(startedOnLaunch) screens=\(expectedFrames.count) timerPausedDuringRest=\(timerPausedDuringRest) nextDelay=\(formattedDelay)")
             fflush(stdout)
             self.stopReminders()
             exit(passed ? 0 : 1)

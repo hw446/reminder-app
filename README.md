@@ -19,10 +19,12 @@ Open `dist/Reminder-Assistant-1.3.0.dmg`, then drag Reminder Assistant to Applic
 
 ## Usage Example
 
+Reminders start counting down automatically whenever the app launches, using your saved settings. The default reminder interval is 20 minutes and the default rest duration is 20 seconds.
+
 1. Click the timer icon in the menu bar and choose **Settings...**.
-2. Keep the default `Take a break ♨️` message or enter your own.
-3. Set the reminder interval and rest duration. The defaults are 20 minutes and 20 seconds.
-4. Click **Start Reminders**.
+2. Click **Stop Reminders** to edit the settings.
+3. Keep the default `Take a break ♨️` message or enter your own, then set the reminder interval and rest duration.
+4. Click **Start Reminders** to resume with the updated settings.
 5. Dismiss a reminder with a click, `Esc`, `Space`, or `Return`, or let its rest countdown finish.
 
 The next reminder interval starts only after the rest ends. Each reminder covers the full bounds of every connected display. Timers pause while the Mac is locked or asleep. When a reminder is dismissed, keyboard focus returns to the app that was frontmost before the reminder appeared.
@@ -31,7 +33,7 @@ Only one instance of the app runs at a time. If you launch it again, the existin
 
 ### Start at login
 
-Enable **Start at login** in Settings. On macOS 13 and later the app uses the native login item service; macOS may ask you to approve it under **System Settings › General › Login Items & Extensions** before it takes effect. The checkbox and the note below it reflect the real system status, so they stay in sync once permission is granted.
+Enable **Start at login** in Settings. The app will open and automatically begin the reminder countdown when you log in. On macOS 13 and later the app uses the native login item service; macOS may ask you to approve it under **System Settings › General › Login Items & Extensions** before it takes effect. The checkbox and the note below it reflect the real system status, so they stay in sync once permission is granted.
 
 Run the native scheduling and multi-display check with:
 
